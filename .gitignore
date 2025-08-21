@@ -1,0 +1,56 @@
+﻿# -------------------------
+# OS generated files
+# -------------------------
+.DS_Store
+Thumbs.db
+
+# -------------------------
+# Node.js
+# -------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# -------------------------
+# Build output
+# -------------------------
+dist/
+build/
+out/
+
+# -------------------------
+# Logs & temp
+# -------------------------
+*.log
+*.tmp
+*.swp
+
+# -------------------------
+# IDE / Editor settings
+# -------------------------
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.vs/
+
+# -------------------------
+# Custom ignore (folder con)
+# -------------------------
+# Ignore toàn bộ file trong folder con
+englishhub.client/node_modules/
+englishhub.client/.env
+
+EnglishHub.Server/appsettings.json
+EnglishHub.Server/obj/
+EnglishHub.Server/bin/
+EnglishHub.Server/packages/
+EnglishHub.Server/*.nupkg
+EnglishHub.Server/*.snupkg
+
+# Ignore tất cả file .log trong mọi folder con
+**/*.log
