@@ -1,5 +1,5 @@
 ﻿import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import authApi from "../api/authApi";
 
 const LoginPage = () => {
@@ -23,8 +23,8 @@ const LoginPage = () => {
         localStorage.setItem("token", res.token);
         localStorage.setItem("refreshToken", res.refreshToken);
 
-        // Điều hướng sang Home
-        navigate("/");
+        // Điều hướng sang Dashboard
+        navigate("/dashboard");
       } else {
         setError("Dữ liệu trả về không hợp lệ!");
       }
@@ -66,6 +66,10 @@ const LoginPage = () => {
           {loading ? "Đang đăng nhập..." : "Đăng nhập"}
         </button>
       </form>
+
+      <p>
+        Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
+      </p>
     </div>
   );
 };

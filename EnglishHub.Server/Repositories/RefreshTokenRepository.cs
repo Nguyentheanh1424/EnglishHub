@@ -40,5 +40,11 @@ namespace EnglishHub.Server.Repositories
                 )
                 .FirstOrDefaultAsync();
         }
+
+        public async Task DeleteRefreshTokenByUserId(string userId)
+        {
+            var filter = Builders<RefreshToken>.Filter.Eq(rt => rt.UserId, userId);
+            await _refreshToken.DeleteManyAsync(filter);
+        }
     }
 }

@@ -18,7 +18,7 @@ namespace EnglishHub.Server.Controllers.Authentication
 
         [HttpPost("register")]
         [AllowAnonymous]
-        public async Task<IActionResult> Register([FromBody] RegisterDto request)
+        public async Task<IActionResult> RequestRegister([FromBody] RegisterDto request)
         {
             if (request == null ||
                 string.IsNullOrEmpty(request.Username) ||
@@ -29,7 +29,7 @@ namespace EnglishHub.Server.Controllers.Authentication
             }
             try
             {
-                await _authService.RegisterAsync(request.Username, request.Email, request.Password);
+                await _authService.RequestRegisterAsync(request.Username, request.Email, request.Password);
                 return Ok("Registration successful.");
             }
             catch (Exception ex)
@@ -96,7 +96,7 @@ namespace EnglishHub.Server.Controllers.Authentication
             }
         }
 
-        [HttpPost]
+        [HttpPost("logout")]
         [Authorize]
         public async Task<IActionResult> LogoutAsync([FromBody] LogoutDto request)
         {

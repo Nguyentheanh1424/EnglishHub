@@ -13,6 +13,6 @@ namespace EnglishHub.Server.Data
         }
         public IMongoCollection<User> Users => _database.GetCollection<User>("Users");
         public IMongoCollection<RefreshToken> RefreshTokens => _database.GetCollection<RefreshToken>("RefreshTokens");
-
+        public IMongoCollection<OtpCode> OtpCodes => _database.GetCollection<OtpCode>("OtpCodes");
     }
 }

@@ -21,7 +21,7 @@ namespace EnglishHub.Server.Services
             _configuration = configuration;
         }
 
-        public async Task<User> RegisterAsync(string username, string email, string password)
+        public async Task<User> RequestRegisterAsync(string username, string email, string password)
         {
             // Kiểm tra xem người dùng đã tồn tại chưa
             var existingUser = await _userRepository.GetUserByUsernameAsync(username);
@@ -61,6 +61,9 @@ namespace EnglishHub.Server.Services
             {
                 throw new UnauthorizedAccessException("Wrong password.");
             }
+
+            // Thu hồi tất cả RefreshToken, chỉ cho 1 lượt đăng nhập tại 1 thời điểm.
+            await _refreshTokenRepository.DeleteRefreshTokenByUserId(user.Id);
 
             return await GeneratorTokensAsync(user);
         }

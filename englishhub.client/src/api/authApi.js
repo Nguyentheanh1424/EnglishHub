@@ -15,13 +15,14 @@ const authApi = {
 
     // Refresh token
     refreshToken: (data) => {
-        // data: { refreshToken }
+        // data: {userId, refreshToken }
         return axiosClient.post("/auth/refresh", data);
     },
 
     // Đăng xuất 
-    logout: () => {
-        return axiosClient.post("/auth/logout");
+    logout: (data) => {
+        // data: {refreshToken }
+        return axiosClient.post("/auth/logout", data);
     },
 };
 

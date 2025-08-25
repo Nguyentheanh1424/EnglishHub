@@ -1,5 +1,7 @@
 ﻿import axios from "axios";
 import authApi from "./authApi";
+import { jwtDecode } from "jwt-decode";
+
 
 // Kiểm tra biến môi trường
 if (!import.meta.env.VITE_API_BASE_URL) {
@@ -66,8 +68,11 @@ axiosClient.interceptors.response.use(
 
             try {
                 // Refresh token
+                const token = localStorage.getItem("token");
                 const refreshToken = localStorage.getItem("refreshToken");
-                const res = await authApi.refreshToken({ refreshToken });
+                const decodedToken = jwtDecode(token);
+                const userId = decodedToken.nameid;
+                const res = await authApi.refreshToken({userId, refreshToken });
 
                 const newToken = res.token;
                 localStorage.setItem("token", newToken);

@@ -30,5 +30,27 @@ namespace EnglishHub.Server.Repositories
         {
             await _context.Users.InsertOneAsync(user);
         }
+
+        public async Task UpdateUserAsync(User user)
+        {
+            var filter = Builders<User>.Filter.Eq(u => u.Id, user.Id);
+            await _context.Users.ReplaceOneAsync(filter, user);
+        }
+
+        public async Task<string> GetUserEmailByIdAsync(string userId)
+        {
+            var user = await _context.Users
+                .Find(u => u.Id == userId)
+                .FirstOrDefaultAsync();
+            return user?.Email;
+        }
+
+        public async Task<string> GetUserNameByIdAsync(string userId)
+        {
+            var user = await _context.Users
+                .Find(u => u.Id == userId)
+                .FirstOrDefaultAsync();
+            return user?.Username;
+        }
     }
 }

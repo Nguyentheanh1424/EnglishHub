@@ -97,9 +97,12 @@ builder.Services.AddSingleton<MongoDbContext>();
 // Add repositories
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<RefreshTokenRepository>();
+builder.Services.AddScoped<EmailCodeRepository>();
 
 // Add services
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<UserService>();
 
 var app = builder.Build();
 
