@@ -115,5 +115,56 @@ namespace EnglishHub.Server.Services
 
             await SendEmailAsync(oldEmail, subject, htmlBody);
         }
+
+        public async Task SendLinkToConfirmUser(string username, string email, string confirmLink)
+        {
+            var subject = "Xác nhận đăng ký tài khoản";
+            var shortLink = confirmLink.Length > 50
+                ? confirmLink.Substring(0, 50) + "..."
+                : confirmLink;
+
+            var htmlBody = $@"
+                <!doctype html>
+                <html lang='vi'>
+                <head>
+                    <meta charset='utf-8' />
+                    <title>Xác nhận tài khoản</title>
+                </head>
+                <body style='font-family:Arial,sans-serif;background:#f6f7fb;padding:20px;'>
+                    <div style='max-width:560px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;
+                                box-shadow:0 4px 20px rgba(0,0,0,.06);'>
+                        <div style='padding:16px;background:#111;color:#fff;font-weight:700;'>EnglishHub</div>
+                        <div style='padding:24px'>
+                            <h2 style='margin-top:0;'>Chào mừng, {username}!</h2>
+                            <p>Cảm ơn bạn đã đăng ký tài khoản. Vui lòng nhấn vào nút bên dưới để xác nhận và kích hoạt tài khoản của bạn.</p>
+
+                            <p style='text-align:center;margin:24px 0;'>
+                                <a href='{confirmLink}' 
+                                   style='display:inline-block; padding:12px 24px; 
+                                          background-color:#007BFF; color:#fff; font-weight:bold;
+                                          text-decoration:none; border-radius:8px;'>
+                                    Xác nhận tài khoản
+                                </a>
+                            </p>
+
+                            <p>Nếu nút trên không hoạt động, bạn có thể sao chép và dán liên kết sau vào trình duyệt:</p>
+                            <p style='word-break:break-all; color:#555; font-size:13px;background:#fafafa;
+                                      border:1px dashed #ccc;border-radius:6px;padding:8px;'>
+                                <a href='{confirmLink}' style='color:#555;text-decoration:none;'>{shortLink}</a>
+                            </p>
+
+                            <p style='font-size:12px;color:#666;'>Liên kết này sẽ hết hạn sau <b>15 phút</b> vì lý do bảo mật.</p>
+                        </div>
+                        <div style='padding:16px;text-align:center;font-size:12px;color:#888;'>
+                            © {DateTime.UtcNow.Year} EnglishHub
+                        </div>
+                    </div>
+                </body>
+                </html>";
+
+
+
+            await SendEmailAsync(email, subject, htmlBody);
+        }
     }
 }

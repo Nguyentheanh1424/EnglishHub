@@ -21,30 +21,91 @@ namespace EnglishHub.Server.Services
             _configuration = configuration;
         }
 
-        public async Task<User> RequestRegisterAsync(string username, string email, string password)
+        public async Task<string> RequestRegisterAsync(string username, string email, string password)
         {
-            // Kiểm tra xem người dùng đã tồn tại chưa
-            var existingUser = await _userRepository.GetUserByUsernameAsync(username);
+            var jwtKey = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key is not configured.");
+            var issuer = _configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("Jwt:Issuer is not configured.");
+            var audience = _configuration["Jwt:Audience"] ?? throw new InvalidOperationException("Jwt:Audience is not configured.");
+
+            // Kiểm tra xem người dùng đã tồn tại chưa qua Email
+            var existingUser = await _userRepository.GetUserByEmailAsync(email);
             if (existingUser != null)
             {
-                throw new InvalidOperationException("Username already exists.");
+                throw new InvalidOperationException("This email has been registered.");
             }
 
             // Mã hóa mật khẩu
             var hashPassword = BCrypt.Net.BCrypt.HashPassword(password);
 
-            // Tạo người dùng mới
+            // Sinh token dùng để gửi vào email xác nhận user
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim("username", username),
+                new Claim("email", email),
+                new Claim("hashPassword", hashPassword)
+            };
+
+            var token = new JwtSecurityToken(
+                issuer: issuer,
+                audience: audience,
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(15),
+                signingCredentials: creds
+                );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public async Task ConfirmRegisterAsync(string token)
+        {
+            var jwtKey = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key is not configured.");
+            var issuer = _configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("Jwt:Issuer is not configured.");
+            var audience = _configuration["Jwt:Audience"] ?? throw new InvalidOperationException("Jwt:Audience is not configured.");
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = key,
+
+                ValidateIssuer = true,
+                ValidIssuer = issuer,
+
+                ValidAudience = audience,
+                ValidateAudience = true,
+
+                ClockSkew = TimeSpan.Zero
+            }, out _);
+
+            var username = principal.FindFirst("username")?.Value;
+            var email = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+            var hashPassword = principal.FindFirst("hashPassword")?.Value;
+
+            if (string.IsNullOrEmpty(username) ||
+                string.IsNullOrEmpty(email) ||
+                string.IsNullOrEmpty(hashPassword))
+                throw new InvalidOperationException("Invalid token data");
+
+            var existingUser = await _userRepository.GetUserByEmailAsync(email);
+            if (existingUser != null)
+            {
+                throw new InvalidOperationException("This email has been registered.");
+            }
+
             var user = new User
             {
                 Username = username,
                 Email = email,
                 HashPassword = hashPassword,
-                // Role mặc định là User khi đăng ký
+                // Role mặc định là User
             };
 
-            // Lưu người dùng vào cơ sở dữ liệu
             await _userRepository.AddUserAsync(user);
-            return user;
         }
 
         public async Task<(string accessToken, string refreshToken)> LoginAsync(string username, string password)
@@ -76,15 +137,11 @@ namespace EnglishHub.Server.Services
 
         public async Task<(string accessToken, string refreshToken)> GeneratorTokensAsync(User user)
         {
-            // 1. Tạo JWT Access Token
-            var jwtKey = _configuration["Jwt:Key"];
-            var issuer = _configuration["Jwt:Issuer"];
-            var audience = _configuration["Jwt:Audience"];
-            var accessTokenExpirationStr = _configuration["Jwt:AccessTokenExpireMinutes"];
-            var refreshTokenExpirationStr = _configuration["Jwt:RefreshTokenExpireDays"];
-
-            if (string.IsNullOrEmpty(jwtKey))
-                throw new InvalidOperationException("JWT key is not configured.");
+            var jwtKey = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key is not configured.");
+            var issuer = _configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("Jwt:Issuer is not configured.");
+            var audience = _configuration["Jwt:Audience"] ?? throw new InvalidOperationException("Jwt:Audience is not configured.");
+            var accessTokenExpirationStr = _configuration["Jwt:AccessTokenExpireMinutes"] ?? throw new InvalidOperationException("Jwt:AccessTokenExpireMinutes is not configured.");
+            var refreshTokenExpirationStr = _configuration["Jwt:RefreshTokenExpireDays"] ?? throw new InvalidOperationException("Jwt:RefreshTokenExpireDays is not configured.");
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             // Sử dụng hàm băm một chiều để mã hóa khóa bí mật

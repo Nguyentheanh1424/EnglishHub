@@ -10,10 +10,14 @@ namespace EnglishHub.Server.Controllers.Authentication
     public class AuthController : ControllerBase
     {
         private readonly AuthService _authService;
+        private readonly EmailService _emailService;
+        private readonly IConfiguration _configuration;
 
-        public AuthController(AuthService authService)
+        public AuthController(AuthService authService, EmailService emailService, IConfiguration configuration)
         {
             _authService = authService;
+            _emailService = emailService;
+            _configuration = configuration;
         }
 
         [HttpPost("register")]
@@ -29,12 +33,34 @@ namespace EnglishHub.Server.Controllers.Authentication
             }
             try
             {
-                await _authService.RequestRegisterAsync(request.Username, request.Email, request.Password);
-                return Ok("Registration successful.");
+                var token = await _authService.RequestRegisterAsync(request.Username, request.Email, request.Password);
+
+                var baseUrl = _configuration["App:BaseUrl"] ?? throw new InvalidOperationException("App:BaseUrl is not configured.");
+
+                var confirmLink = $"{baseUrl}/api/auth/confirm?token={token}";
+
+                await _emailService.SendLinkToConfirmUser(request.Username, request.Email, confirmLink);
+
+                return Ok("Registration request successful.");
             }
             catch (Exception ex)
             {
-                return BadRequest($"Registration failed: {ex.Message}");
+                return BadRequest($"Registration request failed: {ex.Message}");
+            }
+        }
+
+        [HttpGet("confirm")]
+        public async Task<IActionResult> ConfirmRegister([FromQuery] string token)
+        {
+            try
+            {
+                await _authService.ConfirmRegisterAsync(token);
+
+                return Ok("Registration confirmed sucessfully.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Registration confirmed failed: {ex.Message}");
             }
         }
 
